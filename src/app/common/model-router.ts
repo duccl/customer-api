@@ -4,7 +4,7 @@ import { Request, Response, Next } from 'restify'
 import { NotFoundError } from 'restify-errors'
 
 export abstract class ModelRouter<T extends mongoose.Document> extends Router {
-    basePath:string;
+    basePath: string;
     constructor(protected model: mongoose.Model<T>, protected fieldsToSelectAtGetById: string) {
         super()
         this.on('beforeRender', document => {
@@ -13,20 +13,33 @@ export abstract class ModelRouter<T extends mongoose.Document> extends Router {
         this.basePath = `/${model.collection.name}`
     }
 
-    paginatorOptions = (req: Request) => {
-        let { page = 1, limit = 5 } = req.query        
-        page = Number.parseInt(page)
-        limit = Number.parseInt(limit)
-        return {page,limit}
+    envelopeAll(documents: mongoose.Document[], page: number, limit: number, totalPages: number,currentURL:string | undefined): any {
+        const resource: any = {
+            items: documents,
+            _links: {
+                self:currentURL,
+                next: totalPages - (page * limit) > 0 ? `${this.basePath}?_page=${page + 1}` : "",
+                previous: `${this.basePath}?_page=${page - 1 >= 1 ? page - 1 : 1}`,
+            }
+        }
+        
+        return resource
     }
 
-    envelope(document:mongoose.Document):any{
-        let resource = Object.assign({_links:{}},document.toJSON())
+    paginatorOptions = (req: Request) => {
+        let { _page = 1, limit = 5 } = req.query
+        _page = Number.parseInt(_page)
+        limit = Number.parseInt(limit)
+        return { _page, limit }
+    }
+
+    envelope(document: mongoose.Document): any {
+        let resource = Object.assign({ _links: {} }, document.toJSON())
         resource._links.self = `${this.basePath}/${resource._id}`
         return resource
     }
 
-    protected prepareOne(query: mongoose.DocumentQuery<T | null, T,{}>): mongoose.DocumentQuery<T | null, T,{}> {
+    protected prepareOne(query: mongoose.DocumentQuery<T | null, T, {}>): mongoose.DocumentQuery<T | null, T, {}> {
         return query
     }
 
@@ -40,11 +53,16 @@ export abstract class ModelRouter<T extends mongoose.Document> extends Router {
     }
 
     findAll = (req: Request, resp: Response, next: Next) => {
-        const { page , limit } = this.paginatorOptions(req)
-        this.model.find()
-            .limit(limit)
-            .skip((page - 1) * limit)
-            .then(this.renderAll(resp, next, page, limit, this.model.countDocuments().exec()))
+        const { _page, limit } = this.paginatorOptions(req)
+        this.model.countDocuments()
+            .exec()
+            .then(totalDocumentsCount => {
+                this.model.find()
+                    .limit(limit)
+                    .skip((_page - 1) * limit)
+                    .then(this.renderAll(resp, next, _page, limit,totalDocumentsCount,req.url))
+            })
+
             .catch(next)
     }
 

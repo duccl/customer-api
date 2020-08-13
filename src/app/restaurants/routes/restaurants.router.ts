@@ -27,10 +27,10 @@ class RestaurantRouter extends ModelRouter<IRestaurant>{
 
     findAllMenus = (req: Request, res: Response, next: Next) => {
         const { id } = req.params
-        const { page, limit } = this.paginatorOptions(req)
+        const { _page, limit } = this.paginatorOptions(req)
         this.model.findById(id, 'menu')
             .limit(limit)
-            .skip((page - 1) * limit)
+            .skip((_page - 1) * limit)
             .then(this.render(res,next))
             .catch(next)
 
