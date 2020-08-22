@@ -4,13 +4,11 @@ import { Request, Response, Next } from 'restify'
 import { NotFoundError } from 'restify-errors'
 
 export abstract class ModelRouter<T extends mongoose.Document> extends Router {
-    basePath: string;
     constructor(protected model: mongoose.Model<T>, protected fieldsToSelectAtGetById: string) {
-        super()
+        super(`/${model.collection.name}`,model.collection.name)
         this.on('beforeRender', document => {
             document.password = 'encrypted'
         })
-        this.basePath = `/${model.collection.name}`
     }
 
     envelopeAll(documents: mongoose.Document[], page: number, limit: number, totalPages: number,currentURL:string | undefined): any {

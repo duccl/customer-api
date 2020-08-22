@@ -10,6 +10,9 @@
     "forceConsistentCasingInFileNames": true,
     "watch": true
   },
+  "exclude": [
+    "**/*.test.ts"
+  ],
    "include": [
     "src/**/*.ts",
     "package.json"

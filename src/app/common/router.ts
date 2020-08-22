@@ -3,6 +3,10 @@ import { EventEmitter } from 'events';
 import { NotFoundError } from 'restify-errors';
 import { Document } from 'mongoose'
 export abstract class Router extends EventEmitter {
+    constructor(public basePath: string,public name:string){
+        super()
+    }
+
     abstract applyRoutes(application: restify.Server): any
 
     envelope(document: Document): any {
@@ -41,7 +45,6 @@ export abstract class Router extends EventEmitter {
                     limit,
                     totalPages
                 })
-                .catch(next)
             }
             else {
                 response.json(this.envelopeAll([],page,limit,totalPages,currentURL))
