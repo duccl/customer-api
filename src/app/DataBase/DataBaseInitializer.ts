@@ -10,4 +10,8 @@ export class DataBaseInitializer{
             useUnifiedTopology:true
         })
     }
+
+    static disconnect(){
+        return mongoose.disconnect()
+    }
 }

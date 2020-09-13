@@ -8,7 +8,7 @@
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "watch": false
+    "watch": true
   },
   "exclude": [
     "**/*.test.ts"
